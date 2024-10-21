@@ -1,0 +1,228 @@
+<div class="container">
+  <h1>Subir PDF para Resumir</h1>
+
+  <label for="fileInput" class="file-label">
+    Selecciona un archivo PDF:
+    <input
+      id="fileInput"
+      type="file"
+      (change)="onFileSelected($event)"
+      accept=".pdf"
+      class="file-input"
+    />
+  </label>
+
+  <!-- Mostrar mensaje de carga mientras se procesa el archivo -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Procesando el archivo, por favor espera...</p>
+  </div>
+
+  <!-- Mensaje de error en caso de que haya uno -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="resumen" class="resumen-container">
+    <h2>Resumen</h2>
+    <p>{{ resumen }}</p>
+
+    <!-- Botón para reproducir el texto del resumen -->
+    <button class="play-button" (click)="playTextToSpeech(resumen)">
+      <!-- Ícono de Play -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon-play"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M14.752 11.168l-6.486-3.749A1 1 0 007 8.118v7.764a1 1 0 001.266.961l6.486-3.749a1 1 0 000-1.922z"
+        />
+      </svg>
+      Reproducir Resumen
+    </button>
+  </div>
+
+  <!-- Mostrar fragmentos si existen -->
+  <div *ngIf="fragmentos.length > 0" class="fragmentos-container">
+    <h2>Fragmentos</h2>
+    <ul>
+      <li *ngFor="let fragmento of fragmentos">{{ fragmento }}</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  :root {
+    --fondo-oscuro: #1e293b;
+    --azul-vivo: #2563eb;
+    --azul-suave: #60a5fa;
+    --gris-oscuro: #334155;
+    --gris-texto: #e2e8f0;
+    --rojo-error: #f87171;
+    --blanco: #f9fafb;
+    --verde-aceptado: #22c55e;
+  }
+
+  body {
+    background-color: var(--fondo-oscuro);
+    font-family: "Inter", sans-serif;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff; /* Color blanco explícito */
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    position: relative; /* Asegura que no haya interferencia */
+    z-index: 1; /* Asegura que el contenedor esté por encima de otros elementos */
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: var(--fondo-oscuro); /* Mantén el blanco aquí */
+  }
+
+  .file-label {
+    display: block;
+    font-size: 18px;
+    color: var(--gris-texto); /* Cambié a gris claro para mayor contraste */
+    margin-bottom: 15px;
+  }
+
+  .file-input {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+    border: 2px solid var(--azul-vivo);
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: var(--azul-suave);
+    color: var(--blanco);
+  }
+
+  .file-input:hover {
+    border-color: var(--azul-suave);
+    background-color: var(--azul-vivo);
+  }
+
+  .error-message {
+    color: var(--rojo-error);
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+
+  .resumen-container,
+  .fragmentos-container {
+    margin-top: 25px;
+  }
+
+  .resumen-container h2,
+  .fragmentos-container h2 {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--verde-aceptado); /* Verde aceptado */
+    margin-bottom: 12px;
+  }
+
+  .resumen-container p,
+  .fragmentos-container li {
+    background-color: rgba(
+      0,
+      0,
+      0,
+      0.1
+    ); /* Fondo oscuro para contrastar con el texto claro */
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    color: var(--gris-texto);
+    line-height: 1.6;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .fragmentos-container ul {
+    list-style-type: square;
+    padding-left: 25px;
+  }
+
+  .fragmentos-container li {
+    margin-bottom: 12px;
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid #60a5fa; /* Borde suave */
+    border-top: 6px solid #2563eb; /* Borde animado */
+    border-radius: 50%;
+    animation: spin 1s linear infinite; /* Animación de rotación */
+    margin-bottom: 15px;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading-text {
+    font-size: 18px;
+    color: var(--azul-vivo);
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .play-button {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centrar el botón horizontalmente */
+    margin: 20px auto; /* Margen para centrarlo verticalmente */
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #ffffff; /* Blanco para el texto */
+    background-color: #2563eb; /* Azul vivo para el fondo */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para darle más estilo */
+  }
+
+  .play-button:hover {
+    background-color: #60a5fa; /* Azul suave para el hover */
+  }
+
+  .play-button .icon-play {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px; /* Espacio entre el ícono y el texto */
+    fill: #ffffff; /* Color del ícono */
+  }
+
+  .play-button:focus {
+    outline: none; /* Remover borde de enfoque */
+  }
+</style>

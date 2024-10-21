@@ -1,0 +1,23 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+    background-color: #1E293B; /* Fondo oscuro */
+    color: #E2E8F0; /* Aseguramos que el texto sea gris claro */
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+  }
+  
+  /* Evitar que el texto de elementos específicos sea afectado */
+  h1, h2, p, li {
+    color: #1E293B; /* Aseguramos que todos estos elementos tengan color claro */
+  }
+  
+  .file-input {
+    background-color: #60A5FA; /* Azul suave solo para el input */
+    color: #FFFFFF; /* Aseguramos que el texto sea blanco en los inputs */
+  }
+  
+  /* Corrige los estilos de los links o botones si están azulados */
+  a, button {
+    color: #FFFFFF; /* Blanco para los enlaces o botones */
+  }
+  

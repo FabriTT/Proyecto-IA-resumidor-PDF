@@ -1,0 +1,8 @@
+.app-container {
+    background-color: #1E293B; /* Fondo oscuro */
+    color: #1E293B; /* Texto claro */
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh; /* Asegurar que ocupe toda la pantalla */
+    margin: 0;
+  }
+  
