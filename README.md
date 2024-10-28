@@ -25,7 +25,7 @@ Antes de empezar, asegúrate de tener instalado lo siguiente:
 2. Inicia FastAPI:
 
    ```bash
-   unicorn main:app --reload
+   uvicorn main:app --reload
    ```
 
 ### Para iniciar el Frontend

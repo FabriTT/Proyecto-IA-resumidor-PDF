@@ -15,6 +15,7 @@ export class PdfUploadComponent {
   fragmentos: string[] = [];
   errorMessage: string = '';
   isLoading: boolean = false;
+  audioPath: string = ''; 
 
   constructor(private pdfUploadService: PdfUploadServiceService) {}
 
@@ -25,6 +26,7 @@ export class PdfUploadComponent {
       next: (response) => {
         this.resumen = response.resumen;
         this.fragmentos = response.fragmentos;
+        this.audioPath = response.audio_path;
         this.errorMessage = '';
         this.isLoading = false;
       },
@@ -46,11 +48,21 @@ export class PdfUploadComponent {
   }
 
   // Método para reproducir el resumen en voz
-  playTextToSpeech(text: string) {
-    const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = 'es-ES'; // Puedes cambiar el idioma si es necesario
-    speech.pitch = 1; // Tono
-    speech.rate = 1; // Velocidad
-    window.speechSynthesis.speak(speech);
+  playAudio() {
+    if (!this.audioPath) {
+      this.errorMessage = 'No hay audio disponible';
+      return;
+    }
+
+    this.pdfUploadService.getAudio(this.audioPath).subscribe({
+      next: (audioBlob) => {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = 'Error al reproducir el audio: ' + error.message;
+      },
+    });
   }
 }

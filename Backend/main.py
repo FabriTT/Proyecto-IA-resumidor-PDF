@@ -1,8 +1,12 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware  # Importar CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, JSONResponse
 import fitz  # PyMuPDF para leer PDFs
 from transformers import pipeline, BartTokenizer
-from googletrans import Translator  # Importar el traductor
+from googletrans import Translator
+from gtts import gTTS  # Importar gTTS para texto a voz
+import os
+import io
 from typing import List
 
 app = FastAPI()
@@ -10,10 +14,10 @@ app = FastAPI()
 # Habilitar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes especificar dominios específicos o usar "*" para permitir todos
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos los métodos HTTP
-    allow_headers=["*"],  # Permitir todos los headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Inicializar el tokenizador de BART y el traductor
@@ -26,7 +30,7 @@ def extraer_texto_pdf(pdf_file: UploadFile):
     for pagina_num in range(documento.page_count):
         pagina = documento.load_page(pagina_num)
         texto += pagina.get_text("text")
-    return texto.replace("\n", " ").replace("\r", "")  # Limpieza básica
+    return texto.replace("\n", " ").replace("\r", "")
 
 def resumir_con_IA(texto, max_length=150, min_length=50, device=-1):
     resumen_ia = pipeline("summarization", model="facebook/bart-large-cnn", device=device)
@@ -53,6 +57,12 @@ def dividir_texto(texto, max_tokens=800):
 
     return fragmentos
 
+def generar_audio_resumen(resumen):
+    tts = gTTS(text=resumen, lang='es', slow=False)
+    audio_path = "resumen_audio.mp3"
+    tts.save(audio_path)  # Guarda el archivo de audio
+    return audio_path
+
 @app.post("/procesar_pdf/")
 async def procesar_pdf(pdf: UploadFile = File(...)):
     # Extraer el texto del PDF
@@ -71,7 +81,25 @@ async def procesar_pdf(pdf: UploadFile = File(...)):
     # Combinar todos los resúmenes
     resumen_final = " ".join(resumen_total)
 
-    return {
-        "fragmentos": fragmentos,  # Devolver los fragmentos en un array
-        "resumen": resumen_final    # Devolver el resumen final
-    }
+    # Generar el audio del resumen y guardar el nombre de archivo
+    audio_path = generar_audio_resumen(resumen_final)
+
+    # Devolver el resumen y los fragmentos como JSON
+    return JSONResponse(content={
+        "fragmentos": fragmentos,
+        "resumen": resumen_final,
+        "audio_path": audio_path  # Ruta del archivo de audio para obtener luego
+    })
+
+@app.get("/audio_resumen/")
+async def audio_resumen():
+    audio_path = "resumen_audio.mp3"  # Usar un nombre de archivo fijo
+    if os.path.exists(audio_path):
+        # Leer el archivo de audio y crear el StreamResponse
+        with open(audio_path, "rb") as audio_file:
+            audio_data = io.BytesIO(audio_file.read())
+
+        # Devolver el archivo de audio como streaming
+        return StreamingResponse(audio_data, media_type="audio/mpeg")
+    else:
+        return JSONResponse(content={"error": "Archivo de audio no encontrado"}, status_code=404)
